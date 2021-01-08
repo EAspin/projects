@@ -1,0 +1,71 @@
+;graphic constants
+(require 2htdp/universe)
+(require 2htdp/image)
+(require racket/unit)
+(define MT (empty-scene 180 230 "white"))
+(define BOARD (place-image (square 60 "outline" "black") 30 30
+                          (place-image (square 60 "outline" "black") 90 30
+                                       (place-image (square 60 "outline" "black") 150 30
+                                                    (place-image (square 60 "outline" "black") 30 90
+                                                                 (place-image (square 60 "outline" "black") 90 90
+                                                                              (place-image (square 60 "outline" "black") 150 90
+                                                                                           (place-image (square 60 "outline" "black") 30 150
+                                                                                                        (place-image (square 60 "outline" "black") 90 150
+                                                                                                                     (place-image (square 60 "outline" "black") 150 150
+                                                                                                                                                            MT))))))))))
+
+(define-struct xplayer [ws])
+(define-struct oplayer [ws])
+
+
+;determines which box the player is in
+
+
+(define BOX1 (make-posn 30 30))
+(define BOX2 (make-posn 90 30))
+(define BOX3 (make-posn 150 30))
+(define BOX4 (make-posn 30 90))
+(define BOX5 (make-posn 90 90))
+(define BOX6 (make-posn 150 90))
+(define BOX7 (make-posn 30 150))
+(define BOX8 (make-posn 90 150))
+(define BOX9 (make-posn 150 150))
+
+(define (which-box x y)
+  (cond
+    [(and (and (> x 0) (< x 60)) (and (> y 0) (< y 60))) BOX1]
+    [(and (and (> x 60) (< x 120)) (and (> y 0) (< y 60))) BOX2]
+    [(and (and (> x 120) (< x 180)) (and (> y 0) (< y 60))) BOX3]
+    [(and (and (> x 0) (< x 60)) (and (> y 60) (< y 120))) BOX4]
+    [(and (and (> x 60) (< x 120)) (and (> y 60) (< y 120))) BOX5]
+    [(and (and (> x 120) (< x 180)) (and (> y 60) (< y 120))) BOX6]
+    [(and (and (> x 0) (< x 60)) (and (> y 120) (< y 180))) BOX7]
+    [(and (and (> x 60) (< x 120)) (and (> y 120) (< y 180))) BOX8]
+    [(and (and (> x 120) (< x 180)) (and (> y 120) (< y 180))) BOX9]
+    [else x]))
+
+
+
+;draws board and future clicked boxes and players' turn
+(define (interact player)
+  (cond
+    [(xplayer? player) (place-image (text "X's Turn" 20 "black") 90 205 (xplayer-ws player))]
+    [(oplayer? player) (place-image (text "O's Turn" 20 "black") 90 205 (oplayer-ws player))]))
+
+;places a symbol in the box that was clicked
+(define (mouse ws x-mouse y-mouse me)
+  (cond
+    [(and (xplayer? ws) (string=? "button-down" me)) (make-oplayer
+                                                     (place-image (text "X" 50 "dark green") (posn-x (which-box x-mouse y-mouse)) (posn-y (which-box x-mouse y-mouse)) (xplayer-ws ws)))]
+    [(and (oplayer? ws) (string=? "button-down" me)) (make-xplayer
+                                                     (place-image (text "O" 50 "dark red") (posn-x (which-box x-mouse y-mouse)) (posn-y (which-box x-mouse y-mouse)) (oplayer-ws ws)))]
+    [else ws]))
+
+
+;launches everything
+(define (main player)
+  (big-bang player
+    [to-draw interact]
+    [on-mouse mouse]))
+
+(main (make-oplayer BOARD))
